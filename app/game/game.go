@@ -115,7 +115,8 @@ func (g *Game) DrawBoard() {
 		g.Boards()[numberFood][food.Point().Y][food.Point().X] = 'O'
 	}
 
-	for _, board := range g.Boards() {
+	for number, board := range g.Boards() {
+		fmt.Printf("Игрок %d\n", number+1)
 		for i := 0; i < Setting.Height; i++ {
 			for _, cell := range board[i] {
 				fmt.Print(string(cell))
