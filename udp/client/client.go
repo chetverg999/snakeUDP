@@ -3,7 +3,6 @@ package client
 import (
 	"fmt"
 	"github.com/eiannone/keyboard"
-	"net"
 	"snacke/udp/game"
 	"time"
 )
@@ -17,10 +16,10 @@ const (
 
 var app = game.Game{}
 var setting = game.Setting
-var inputBytes = make([]byte, 1)
+var udpMessages = make(chan string)
 
 func Client() {
-	connection, serverAddress := startClient()
+	connection, _ := startClient()
 	app.Init() // запуск игры
 
 	keysEvents, _ := keyboard.GetKeys(10)
@@ -33,9 +32,25 @@ func Client() {
 	defer tickerSnake.Stop()
 	defer tickerFood.Stop()
 
-	for {
+	go func() {
+		inputBytes := make([]byte, 1024)
+		for {
+			n, _, err := connection.ReadFromUDP(inputBytes)
+			if err != nil {
+				fmt.Println("Ошибка при чтении из UDP:", err)
+				continue
+			}
 
+			message := string(inputBytes[:n])
+			if len(message) > 0 { // Игнорируем пустые сообщения
+				udpMessages <- message
+			}
+		}
+	}()
+
+	for {
 		select {
+
 		case <-tickerFood.C:
 			app.TickerDrawFood()
 			break
@@ -44,25 +59,32 @@ func Client() {
 				tickerFood = time.NewTicker(setting.GetFoodLiveDuration())
 			}
 			break
-		case event := <-keysEvents:
-			switch event.Key {
-			case keyboard.KeyArrowUp:
+		case messege := <-udpMessages:
+			// получаем сообщение от сервера
+			switch messege {
+
+			case string(KeyArrowUp):
 				app.Snakes()[0].ChangeDirection(game.MoveUp())
 				break
-			case keyboard.KeyArrowDown:
+			case string(KeyArrowDown):
 				app.Snakes()[0].ChangeDirection(game.MoveDown())
 				break
-			case keyboard.KeyArrowLeft:
+			case string(KeyArrowLeft):
 				app.Snakes()[0].ChangeDirection(game.MoveLeft())
 				break
-			case keyboard.KeyArrowRight:
+			case string(KeyArrowRight):
 				app.Snakes()[0].ChangeDirection(game.MoveRight())
 				break
-			case keyboard.KeyEsc:
-				panic("Stop")
-			default: // получаем сообщение от клиента
+			}
+
+		case event := <-keysEvents:
+
+			switch event.Key {
+
+			default: // отправляем сообщение
 
 				if game.CheckMultiDirection(event.Rune, game.MultiArrowUp) {
+					app.Snakes()[len(app.Snakes())-1].ChangeDirection(game.MoveUp())
 					_, err := connection.Write([]byte(string(game.MultiArrowUp)))
 					if err != nil {
 						fmt.Println(err)
@@ -70,6 +92,7 @@ func Client() {
 				}
 
 				if game.CheckMultiDirection(event.Rune, game.MultiArrowDown) {
+					app.Snakes()[len(app.Snakes())-1].ChangeDirection(game.MoveDown())
 					_, err := connection.Write([]byte(string(game.MultiArrowDown)))
 					if err != nil {
 						fmt.Println(err)
@@ -77,6 +100,7 @@ func Client() {
 				}
 
 				if game.CheckMultiDirection(event.Rune, game.MultiArrowLeft) {
+					app.Snakes()[len(app.Snakes())-1].ChangeDirection(game.MoveLeft())
 					_, err := connection.Write([]byte(string(game.MultiArrowLeft)))
 					if err != nil {
 						fmt.Println(err)
@@ -84,6 +108,7 @@ func Client() {
 				}
 
 				if game.CheckMultiDirection(event.Rune, game.MultiArrowRight) {
+					app.Snakes()[len(app.Snakes())-1].ChangeDirection(game.MoveRight())
 					_, err := connection.Write([]byte(string(game.MultiArrowRight)))
 					if err != nil {
 						fmt.Println(err)
@@ -91,11 +116,5 @@ func Client() {
 				}
 			}
 		}
-	}
-
-	_, err = connection.Read(inputBytes)
-	if err != nil {
-		fmt.Println(err)
-		continue
 	}
 }

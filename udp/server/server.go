@@ -16,11 +16,15 @@ const (
 
 var app = game.Game{}
 var setting = game.Setting
-var inputBytes = make([]byte, 1)
+var udpMessages = make(chan string)
 
 func Server() {
-	connection, clientAddress := StartServer() // запуск сервера
-	app.Init()                                 // запуск игры
+	connection, clientAddress := StartServer()
+	if connection == nil {
+		fmt.Println("Ошибка: сервер не запустился")
+		return
+	} // запуск сервера
+	app.Init() // запуск игры
 
 	keysEvents, _ := keyboard.GetKeys(10)
 	defer func() {
@@ -32,8 +36,25 @@ func Server() {
 	defer tickerSnake.Stop()
 	defer tickerFood.Stop()
 
+	go func() {
+		inputBytes := make([]byte, 1024)
+		for {
+			n, _, err := connection.ReadFromUDP(inputBytes)
+			if err != nil {
+				fmt.Println("Ошибка при чтении из UDP:", err)
+				continue
+			}
+
+			message := string(inputBytes[:n])
+			if len(message) > 0 { // Игнорируем пустые сообщения
+				udpMessages <- message
+			}
+		}
+	}()
+
 	for {
 		select {
+
 		case <-tickerFood.C:
 			app.TickerDrawFood()
 			break
@@ -42,8 +63,11 @@ func Server() {
 				tickerFood = time.NewTicker(setting.GetFoodLiveDuration())
 			}
 			break
+
 		case event := <-keysEvents:
+
 			switch event.Key {
+
 			case keyboard.KeyArrowUp:
 				app.Snakes()[0].ChangeDirection(game.MoveUp())
 				// отправляем сообщение клиенту
@@ -82,28 +106,23 @@ func Server() {
 				break
 			case keyboard.KeyEsc:
 				panic("Stop")
-			default: // получаем сообщение от клиента
-				n, _, err := connection.ReadFromUDP(inputBytes)
-				if err != nil {
-					fmt.Println(err)
-					continue
-				}
+			default:
+				continue
+			}
+		case messege := <-udpMessages:
 
-				if string(inputBytes[:n]) == string(game.MultiArrowUp) {
-					app.Snakes()[len(app.Snakes())-1].ChangeDirection(game.MoveUp())
-				}
+			switch messege {
 
-				if string(inputBytes[:n]) == string(game.MultiArrowDown) {
-					app.Snakes()[len(app.Snakes())-1].ChangeDirection(game.MoveDown())
-				}
-
-				if string(inputBytes[:n]) == string(game.MultiArrowLeft) {
-					app.Snakes()[len(app.Snakes())-1].ChangeDirection(game.MoveLeft())
-				}
-
-				if string(inputBytes[:n]) == string(game.MultiArrowRight) {
-					app.Snakes()[len(app.Snakes())-1].ChangeDirection(game.MoveRight())
-				}
+			case string(game.MultiArrowUp):
+				app.Snakes()[len(app.Snakes())-1].ChangeDirection(game.MoveUp())
+			case string(game.MultiArrowDown):
+				app.Snakes()[len(app.Snakes())-1].ChangeDirection(game.MoveDown())
+			case string(game.MultiArrowLeft):
+				app.Snakes()[len(app.Snakes())-1].ChangeDirection(game.MoveLeft())
+			case string(game.MultiArrowRight):
+				app.Snakes()[len(app.Snakes())-1].ChangeDirection(game.MoveRight())
+			default:
+				continue
 			}
 		}
 	}

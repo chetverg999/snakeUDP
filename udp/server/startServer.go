@@ -17,7 +17,7 @@ func StartServer() (*net.UDPConn, *net.UDPAddr) {
 		fmt.Println(err)
 		return nil, nil
 	}
-	defer connection.Close()
+	//defer connection.Close()
 
 	// получаем сообщение от клиента
 	inputBytes := make([]byte, 50)

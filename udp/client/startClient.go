@@ -17,7 +17,7 @@ func startClient() (*net.UDPConn, *net.UDPAddr) {
 		fmt.Println(err)
 		return nil, nil
 	}
-	defer connection.Close()
+	//defer connection.Close()
 
 	_, err = connection.Write([]byte("Соединение установлено"))
 	if err != nil {
