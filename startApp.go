@@ -2,13 +2,12 @@ package main
 
 import (
 	"fmt"
-	"snacke/udp/client"
-	"snacke/udp/game"
-	"snacke/udp/server"
+	"snacke/app/game/config"
+	"snacke/app/udp"
 )
 
 func main() {
-	fmt.Print(game.AsciiArt)
+	fmt.Print(config.AsciiArt)
 	fmt.Println("Вы запускаете сервер или клиент?")
 	fmt.Println("Если сервер - введите S, если клиент - введите C")
 	var input string
@@ -20,10 +19,10 @@ func main() {
 		} // Читаем строку до нажатия Enter
 		switch input {
 		case "S":
-			server.Server()
+			udp.Server()
 			return
 		case "C":
-			client.Client()
+			udp.Client()
 			return
 		default:
 			fmt.Print("Введено неизвестное значение, попробуйте снова: ")

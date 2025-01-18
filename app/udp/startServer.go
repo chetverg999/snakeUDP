@@ -1,13 +1,18 @@
-package server
+package udp
 
 import (
 	"fmt"
 	"net"
+	"time"
 )
+
+var addr = "192.168.0.104:8080"
+var localAddr = "127.0.0.1:8080"
+var Now = time.Now().UnixNano()
 
 func StartServer() (*net.UDPConn, *net.UDPAddr) {
 	fmt.Println("Вы запустили серверное приложение")
-	serverAddress, err := net.ResolveUDPAddr("udp", ":8080")
+	serverAddress, err := net.ResolveUDPAddr("udp", localAddr)
 	if err != nil {
 		fmt.Println(err)
 		return nil, nil
@@ -28,6 +33,9 @@ func StartServer() (*net.UDPConn, *net.UDPAddr) {
 	}
 	fmt.Println("Received message from", clientAddress)
 	fmt.Println(string(inputBytes[:n]))
+
+	writeUDP(clientAddress, []byte(string(Now)), connection)
+	fmt.Println("Отправлена стартовая точка для игры")
 
 	return connection, clientAddress
 }

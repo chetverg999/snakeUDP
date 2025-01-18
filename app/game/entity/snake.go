@@ -1,4 +1,8 @@
-package game
+package entity
+
+import (
+	"snacke/app/game/setting"
+)
 
 type Snake struct {
 	body      []Point
@@ -21,11 +25,11 @@ func (s *Snake) SetDirection(direction Point) {
 	s.direction = direction
 }
 
-func NewSnake() *Snake {
+func NewSnake(setting setting.Settings) *Snake {
 	return &Snake{
 		body: []Point{{
 			X: 0,
-			Y: Setting.Height / 2,
+			Y: setting.Height / 2,
 		}},
 		direction: Point{
 			X: 1,
@@ -34,25 +38,25 @@ func NewSnake() *Snake {
 	}
 }
 
-func (s *Snake) Move() {
+func (s *Snake) Move(setting setting.Settings) {
 	head := s.Body()[0]
 	newX := head.X + s.Direction().X
 	newY := head.Y + s.Direction().Y
 
-	if newX >= Setting.Width && s.Direction().X == 1 {
+	if newX >= setting.Width && s.Direction().X == 1 {
 		newX = 0
 	}
 
 	if newX == 0 && s.Direction().X == -1 {
-		newX = Setting.Width - 1
+		newX = setting.Width - 1
 	}
 
-	if newY >= Setting.Height && s.Direction().Y == 1 {
+	if newY >= setting.Height && s.Direction().Y == 1 {
 		newY = 0
 	}
 
 	if newY == 0 && s.Direction().Y == -1 {
-		newY = Setting.Height - 1
+		newY = setting.Height - 1
 	}
 
 	s.SetBody(append([]Point{{X: newX, Y: newY}}, s.Body()[:len(s.Body())-1]...))

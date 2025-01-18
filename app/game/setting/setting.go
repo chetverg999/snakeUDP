@@ -1,4 +1,4 @@
-package game
+package setting
 
 import "time"
 
@@ -19,12 +19,4 @@ func (s *Settings) GetDuration() time.Duration {
 
 func (s *Settings) GetFoodLiveDuration() time.Duration {
 	return s.FoodLiveDuration
-}
-
-var Setting = Settings{
-	Height:           20,
-	Width:            40,
-	PlayerCount:      2,
-	FoodLiveDuration: 5 * time.Second,
-	Level:            5,
 }

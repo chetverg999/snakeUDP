@@ -1,7 +1,8 @@
-package game
+package entity
 
 import (
 	"math/rand"
+	"snacke/app/game/setting"
 )
 
 type Food struct {
@@ -16,10 +17,10 @@ func (f *Food) SetPoint(point Point) {
 	f.point = point
 }
 
-func NewFood() *Food {
+func NewFood(setting setting.Settings) *Food {
 	return &Food{
 		point: Point{
-			X: rand.Intn(Setting.Width-2) + 1,
-			Y: rand.Intn(Setting.Height-2) + 1},
+			X: rand.Intn(setting.Width-2) + 1,
+			Y: rand.Intn(setting.Height-2) + 1},
 	}
 }

@@ -1,4 +1,4 @@
-package game
+package config
 
 const (
 	SINGLE = 1*iota + 1
@@ -21,3 +21,10 @@ var MultiArrowDown = []rune{115, 1099}
 var MultiArrowLeft = []rune{97, 1092}
 
 var MultiArrowRight = []rune{100, 1074}
+
+const (
+	KeyArrowUp = 0 + iota
+	KeyArrowDown
+	KeyArrowLeft
+	KeyArrowRight
+)
