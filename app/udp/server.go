@@ -3,6 +3,7 @@ package udp
 import (
 	"fmt"
 	"github.com/eiannone/keyboard"
+	"net"
 	"snacke/app/game"
 	"snacke/app/game/config"
 	"snacke/app/game/entity"
@@ -15,6 +16,13 @@ var udpMessagesClient = make(chan string)
 
 func Server() {
 	connection, clientAddress := StartServer()
+
+	defer func(connection *net.UDPConn) {
+		err := connection.Close()
+		if err != nil {
+
+		}
+	}(connection)
 
 	if connection == nil {
 		fmt.Println("Ошибка: сервер не запустился")
