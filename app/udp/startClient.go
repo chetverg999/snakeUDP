@@ -2,15 +2,23 @@ package udp
 
 import (
 	"fmt"
+	"github.com/joho/godotenv"
+	"log"
 	"net"
+	"os"
 	"strconv"
 )
 
 var StartPoint int64
+var input string
 
 func startClient() (*net.UDPConn, *net.UDPAddr) {
+	if err := godotenv.Load(); err != nil {
+		log.Print("No .env file found")
+	}
 	fmt.Println("Вы запустили клиентское приложение")
-	serverAddress, err := net.ResolveUDPAddr("udp", localAddr)
+	addr, _ := os.LookupEnv("LOCAL_HOST")
+	serverAddress, err := net.ResolveUDPAddr("udp", addr)
 	if err != nil {
 		fmt.Println(err)
 		return nil, nil
@@ -21,26 +29,31 @@ func startClient() (*net.UDPConn, *net.UDPAddr) {
 		return nil, nil
 	}
 	//defer connection.Close()
-
-	// отправляем сообщение серверу
-	_, err = connection.Write([]byte("Соединение установлено"))
-	if err != nil {
-		fmt.Println(err)
-	}
-	fmt.Println("Соединение установлено")
-
+	inputBytes := make([]byte, 50)
+	fmt.Println("Введите секретный ключ:")
 	for {
-		inputBytes := make([]byte, 50)
-		fmt.Println("Ожидание стартовой точки от сервера...")
-		n, serverAddress, err := connection.ReadFromUDP(inputBytes)
+		_, err := fmt.Scanln(&input)
 		if err != nil {
 			fmt.Println(err)
 		}
-		fmt.Println("Received message from", serverAddress)
-		fmt.Println(string(inputBytes[:n]))
+		writeUDPdial([]byte(input), connection)
+		n, _, err := connection.ReadFromUDP(inputBytes)
+		if string(inputBytes[:n]) != "OK" {
+			fmt.Println("Неправильный ключ, попробуйте еще раз:")
+			continue
+		} else {
+			break
+		}
+	}
+
+	for {
+		fmt.Println("Ожидание стартовой точки от сервера...")
+		n, _, err := connection.ReadFromUDP(inputBytes)
+		if err != nil {
+			fmt.Println(err)
+		}
 		StartPoint, _ = strconv.ParseInt(string(inputBytes[:n]), 10, 64)
 		break
 	}
-
 	return connection, serverAddress
 }
