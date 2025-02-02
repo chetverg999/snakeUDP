@@ -117,6 +117,7 @@ func (g *Game) DrawBoard() {
 
 	for number, board := range g.Boards() {
 		fmt.Printf("Игрок %d\n", number+1)
+		fmt.Printf("Счет %d\n", len(g.Snakes()[number].Body()))
 		for i := 0; i < Setting.Height; i++ {
 			for _, cell := range board[i] {
 				fmt.Print(string(cell))
