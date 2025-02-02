@@ -28,7 +28,6 @@ func startClient() (*net.UDPConn, *net.UDPAddr) {
 		fmt.Println(err)
 		return nil, nil
 	}
-	//defer connection.Close()
 	inputBytes := make([]byte, 50)
 	fmt.Println("Введите секретный ключ:")
 	for {

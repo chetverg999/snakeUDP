@@ -11,7 +11,6 @@ import (
 )
 
 var Now = time.Now().UnixNano()
-var clientAddress *net.UDPAddr
 
 func StartServer() (*net.UDPConn, *net.UDPAddr) {
 	if err := godotenv.Load(); err != nil {
@@ -19,18 +18,19 @@ func StartServer() (*net.UDPConn, *net.UDPAddr) {
 	}
 	addr, _ := os.LookupEnv("LOCAL_HOST")
 	fmt.Println("Вы запустили серверное приложение")
+
 	serverAddress, err := net.ResolveUDPAddr("udp", addr)
 	if err != nil {
 		fmt.Println(err)
 		return nil, nil
 	}
+
 	connection, err := net.ListenUDP("udp", serverAddress)
 	if err != nil {
 		fmt.Println(err)
 		return nil, nil
 	}
-	//defer connection.Close()
-	secretKey := Secretkey()
+	secretKey := secretKey()
 	fmt.Println("Клиент должен отправить этот ключ:")
 	fmt.Println(secretKey)
 
@@ -38,18 +38,20 @@ func StartServer() (*net.UDPConn, *net.UDPAddr) {
 	inputBytes := make([]byte, 50)
 	fmt.Println("Ожидание ответа от клиента...")
 
+	var clientAddress *net.UDPAddr
 	for {
-		n, clientAddress, err := connection.ReadFromUDP(inputBytes)
+		n, client, err := connection.ReadFromUDP(inputBytes)
 		if err != nil {
 			fmt.Println(err)
 		}
 		if string(inputBytes[:n]) != strconv.FormatInt(secretKey, 10) {
 			fmt.Println("Неправильный ключ")
-			writeUDP(clientAddress, []byte("BAD"), connection)
+			writeUDP(client, []byte("BAD"), connection)
 			continue
 		} else {
-			writeUDP(clientAddress, []byte("OK"), connection)
-			writeUDP(clientAddress, []byte(string(Now)), connection)
+			writeUDP(client, []byte("OK"), connection)
+			writeUDP(client, []byte(string(Now)), connection)
+			clientAddress = client
 			fmt.Println("Отправлена стартовая точка для игры")
 			break
 		}

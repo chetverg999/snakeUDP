@@ -15,6 +15,7 @@ var udpMessagesClient = make(chan string)
 
 func Server() {
 	connection, clientAddress := StartServer()
+
 	if connection == nil {
 		fmt.Println("Ошибка: сервер не запустился")
 		return
