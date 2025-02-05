@@ -3,6 +3,7 @@ package game
 import (
 	"fmt"
 	"math/rand"
+	"snacke/app/dataBase"
 	"snacke/app/game/config"
 	"snacke/app/game/entity"
 	"snacke/app/game/setting"
@@ -16,6 +17,8 @@ var Setting = setting.Settings{
 	FoodLiveDuration: 10 * time.Second,
 	Level:            5,
 }
+
+var highScores *dataBase.FileDataBase
 
 type Game struct {
 	snakes []*entity.Snake
@@ -84,6 +87,13 @@ func (g *Game) Init(seed int64) {
 		foods = append(foods, entity.NewFood(Setting))
 	}
 
+	var err error
+	highScores, err = dataBase.LoadFileDataBase()
+	if err != nil {
+		fmt.Println("Ошибка загрузки рекордов:", err)
+		return
+	}
+
 	g.SetSnakes(snakes)
 	g.SetFoods(foods)
 	g.DrawBoard()
@@ -116,8 +126,16 @@ func (g *Game) DrawBoard() {
 	}
 
 	for number, board := range g.Boards() {
+
 		fmt.Printf("Игрок %d\n", number+1)
 		fmt.Printf("Счет %d\n", len(g.Snakes()[number].Body()))
+		fmt.Printf("Рекорд Игрока %d: %d очков\n", number+1, highScores.BestScore[number+1])
+
+		err := highScores.InsertScore(number+1, len(g.Snakes()[number].Body()))
+		if err != nil {
+			fmt.Println("Ошибка обновления рекорда:", err)
+		}
+
 		for i := 0; i < Setting.Height; i++ {
 			for _, cell := range board[i] {
 				fmt.Print(string(cell))
